@@ -518,13 +518,17 @@ function renderCount() {
       orderBtn.innerHTML = iconCart;
       orderBtn.onclick = () => {
         if (local.ordered[item.id]) {
-          delete local.ordered[item.id];
+          showConfirm(`Fjern "${item.name}" fra ordrelisten?\nRemove "${item.name}" from the order list?`, () => {
+            delete local.ordered[item.id];
+            saveLocal();
+            renderCount();
+          });
         } else {
           local.ordered[item.id] = true;
           delete local.instock[item.id];
+          saveLocal();
+          renderCount();
         }
-        saveLocal();
-        renderCount();
       };
 
       actions.appendChild(stockBtn);
