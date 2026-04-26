@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Lagerapp">
+<title>Lageroptælling / Stock Count</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F7F5F0;
+  --surface:#FFFFFF;
+  --surface2:#F0EDE8;
+  --text:#1A1814;
+  --text2:#6B6760;
+  --text3:#A8A49E;
+  --accent:#2D6A4F;
+  --accent-light:#E8F3EE;
+  --accent-text:#1B4332;
+  --warn:#C0392B;
+  --warn-light:#FDECEA;
+  --warn-text:#922B21;
+  --border:#E2DED8;
+  --border2:#C8C4BE;
+  --radius:10px;
+  --radius-sm:6px;
+  --font:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --nav-h:52px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;overscroll-behavior:none}
+body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height:100vh}
+
+.nav{display:flex;background:var(--surface);border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:100;height:var(--nav-h);flex-shrink:0}
+.nav-btn{flex:1;padding:0 8px;font-size:13px;font-weight:500;font-family:var(--font);border:none;background:transparent;cursor:pointer;color:var(--text2);border-bottom:2.5px solid transparent;transition:all .15s;letter-spacing:.02em;line-height:1.3;text-align:center}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.nav-btn .sub{display:block;font-size:10px;color:var(--text3);font-weight:400;margin-top:1px}
+.nav-btn.active .sub{color:var(--accent);opacity:.7}
+
+.view{flex:1;overflow-y:auto;padding-bottom:2rem}
+.page-header{padding:1.25rem 1rem .5rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.page-title{font-size:21px;font-weight:600;color:var(--text);line-height:1.1}
+.page-subtitle{font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono)}
+
+.stats-row{display:flex;gap:8px;padding:0 1rem 1rem}
+.stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
+.stat-num{font-size:22px;font-weight:600;color:var(--text)}
+.stat-num.warn{color:var(--warn)}
+.stat-num.ok{color:var(--accent)}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.3}
+
+.search-wrap{padding:0 1rem .6rem}
+.search-wrap input{width:100%;padding:9px 12px;font-size:14px;font-family:var(--font);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;-webkit-appearance:none}
+.search-wrap input:focus{border-color:var(--accent)}
+.filter-row{display:flex;gap:6px;padding:0 1rem .75rem;flex-wrap:wrap}
+.f-btn{font-size:12px;font-family:var(--font);padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.f-btn.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+.cat-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.7rem 1rem .3rem;font-family:var(--mono)}
+
+.item-row{display:flex;align-items:center;gap:8px;padding:10px 1rem;background:var(--surface);border-top:1px solid var(--border);transition:opacity .15s}
+.item-row:last-of-type{border-bottom:1px solid var(--border)}
+.item-row.skipped{opacity:.38}
+.item-row.low-stock{background:var(--warn-light)}
+.item-name-wrap{flex:1;min-width:0}
+.item-name{font-size:14px;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thresh-hint{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.thresh-hint.under{color:var(--warn);font-weight:500}
+.thresh-hint.over{color:var(--accent);font-weight:500}
+.order-hint{font-size:11px;color:var(--accent-text);font-family:var(--mono);margin-top:1px;font-weight:500}
+.qty-input{width:68px;padding:7px 6px;font-size:14px;font-family:var(--mono);text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;flex-shrink:0}
+.qty-input:focus{border-color:var(--accent);background:var(--surface)}
+.unit-lbl{font-size:12px;color:var(--text3);min-width:30px;font-family:var(--mono);flex-shrink:0}
+.skip-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0;transition:all .15s;font-family:var(--font)}
+.skip-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.msg-section{padding:1rem}
+.msg-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.msg-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.msg-head-text{font-size:13px;font-weight:600;color:var(--text)}
+.msg-head-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.msg-body{padding:14px;font-family:var(--mono);font-size:12.5px;line-height:1.9;color:var(--text);min-height:60px;white-space:pre-wrap;word-break:break-word;background:var(--bg)}
+.copy-btn{padding:8px 16px;font-size:13px;font-weight:500;font-family:var(--font);border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;cursor:pointer;transition:background .15s;white-space:nowrap}
+.copy-btn:active{background:var(--accent-text)}
+.reset-btn{width:100%;padding:10px;font-size:13px;font-family:var(--font);border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;margin-top:10px;transition:background .15s}
+.reset-btn:active{background:var(--surface2)}
+.msg-actions{padding:0 14px 14px}
+.empty-msg{padding:1.5rem 1rem;text-align:center;color:var(--text3);font-size:13px}
+
+.add-btn{padding:8px 14px;font-size:13px;font-weight:500;font-family:var(--font);background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
+.manage-cat-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.7rem 1rem .3rem;font-family:var(--mono)}
+.manage-item{display:flex;align-items:center;gap:8px;padding:10px 1rem;background:var(--surface);border-top:1px solid var(--border)}
+.manage-item:last-child{border-bottom:1px solid var(--border)}
+.mi-name{font-size:14px;color:var(--text);font-weight:500}
+.mi-meta{font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.mi-thresh-badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:var(--accent-light);color:var(--accent-text);font-family:var(--mono);margin-left:4px}
+.mi-target-badge{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:#EEF2FF;color:#3730A3;font-family:var(--mono);margin-left:4px}
+.mi-actions{display:flex;gap:6px;flex-shrink:0}
+.edit-btn,.del-btn{padding:5px 10px;font-size:12px;font-family:var(--font);border:1px solid var(--border);border-radius:var(--radius-sm);background:transparent;cursor:pointer;transition:background .15s}
+.edit-btn{color:var(--text2)}
+.edit-btn:active{background:var(--surface2)}
+.del-btn{color:var(--warn)}
+.del-btn:active{background:var(--warn-light)}
+.manage-empty{padding:2.5rem 1rem;text-align:center;color:var(--text3);font-size:14px;line-height:1.7}
+
+/* Loading & sync */
+.sync-bar{padding:6px 1rem;font-size:11px;font-family:var(--mono);color:var(--text3);display:flex;align-items:center;gap:6px;min-height:28px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.ok{background:var(--accent)}
+.sync-dot.err{background:var(--warn)}
+.sync-dot.spin{background:var(--text3);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:12px}
+.loading-overlay.hidden{display:none}
+.loading-spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text3);font-family:var(--mono)}
+
+.modal-bg{position:fixed;inset:0;background:rgba(26,24,20,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:0}
+.modal-bg.hidden{display:none}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;padding:1.5rem 1rem;width:100%;max-width:600px;max-height:90vh;overflow-y:auto}
+@media(min-width:520px){
+  .modal-bg{align-items:center;padding:1rem}
+  .modal{border-radius:var(--radius);max-width:420px}
+}
+.modal-title{font-size:17px;font-weight:600;margin-bottom:1.25rem;color:var(--text)}
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select{width:100%;padding:10px 12px;font-size:15px;font-family:var(--font);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;appearance:none}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23A8A49E' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field input:focus,.field select:focus{border-color:var(--accent);background:var(--surface)}
+.field-hint{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5}
+.modal-actions{display:flex;gap:8px;margin-top:1.5rem}
+.save-btn{flex:1;padding:12px;font-size:15px;font-weight:600;font-family:var(--font);background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer}
+.save-btn:active{background:var(--accent-text)}
+.cancel-btn{padding:12px 18px;font-size:15px;font-family:var(--font);border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:var(--radius-sm);cursor:pointer}
+.cancel-btn:active{background:var(--surface2)}
+
+.confirm-bg{position:fixed;inset:0;background:rgba(26,24,20,.5);display:flex;align-items:center;justify-content:center;z-index:300;padding:1rem}
+.confirm-bg.hidden{display:none}
+.confirm-box{background:var(--surface);border-radius:var(--radius);padding:1.25rem;width:100%;max-width:320px}
+.confirm-box p{font-size:15px;color:var(--text);margin-bottom:1.25rem;line-height:1.5}
+.confirm-actions{display:flex;gap:8px}
+.confirm-ok{flex:1;padding:10px;font-size:14px;font-weight:600;font-family:var(--font);background:var(--warn);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer}
+.confirm-cancel{flex:1;padding:10px;font-size:14px;font-family:var(--font);border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:var(--radius-sm);cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Henter data... / Loading...</div>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" id="tab-count" onclick="showTab('count')">
+    Lageroptælling
+    <span class="sub">Stock count</span>
+  </button>
+  <button class="nav-btn" id="tab-manage" onclick="showTab('manage')">
+    Administrer varer
+    <span class="sub">Manage ingredients</span>
+  </button>
+</nav>
+
+<!-- COUNT VIEW -->
+<div class="view" id="view-count">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Lageroptælling</div>
+      <div class="page-subtitle" id="count-date"></div>
+    </div>
+  </div>
+
+  <div class="sync-bar">
+    <div class="sync-dot spin" id="sync-dot"></div>
+    <span id="sync-text">Forbinder... / Connecting...</span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="s-counted">0</div>
+      <div class="stat-lbl">Optalt<br><em>Counted</em></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num warn" id="s-low">0</div>
+      <div class="stat-lbl">Under minimum<br><em>Below threshold</em></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num ok" id="s-ok">0</div>
+      <div class="stat-lbl">OK / spring over<br><em>OK / skip</em></div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="Søg vare... / Search ingredient..." oninput="renderCount()">
+  </div>
+
+  <div class="filter-row">
+    <button class="f-btn active" onclick="setFilter('all',this)">Alle / All</button>
+    <button class="f-btn" onclick="setFilter('low',this)">Under minimum</button>
+    <button class="f-btn" onclick="setFilter('skipped',this)">Sprunget over / Skipped</button>
+  </div>
+
+  <div id="count-list"></div>
+
+  <div class="msg-section">
+    <div class="msg-box">
+      <div class="msg-head">
+        <div>
+          <div class="msg-head-text">Bestillingsbesked / Order message</div>
+          <div class="msg-head-sub">Klar til at kopiere og sende / Ready to copy &amp; send</div>
+        </div>
+        <button class="copy-btn" id="copy-btn" onclick="copyMsg()">Kopiér</button>
+      </div>
+      <div class="msg-body" id="msg-body">Udfyld mængder ovenfor for at generere din bestillingsbesked.
+Fill in quantities above to generate your order message.</div>
+      <div class="msg-actions">
+        <button class="reset-btn" onclick="confirmReset()">Nulstil alle mængder / Reset all quantities</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE VIEW -->
+<div class="view" id="view-manage" style="display:none">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Administrer varer</div>
+      <div class="page-subtitle">Manage ingredients</div>
+    </div>
+    <button class="add-btn" onclick="openModal()">+ Tilføj</button>
+  </div>
+  <div class="search-wrap"><input type="text" id="manage-search" placeholder="Søg vare... / Search ingredient..." oninput="renderManage()"></div>
+  <div id="manage-list"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg hidden" id="modal-bg" onclick="handleModalBgClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">Tilføj vare / Add ingredient</div>
+    <div class="field">
+      <label>Navn / Name</label>
+      <input id="f-name" type="text" placeholder="f.eks. Kyllingebryst / Chicken breast" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Kategori / Category</label>
+      <select id="f-cat">
+        <option value="Proteiner / Proteins">Proteiner / Proteins</option>
+        <option value="Grøntsager / Vegetables">Grøntsager / Vegetables</option>
+        <option value="Lager &amp; Saucer / Pantry &amp; Sauces">Lager &amp; Saucer / Pantry &amp; Sauces</option>
+        <option value="Tørvarer / Dry goods">Tørvarer / Dry goods</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Enhed / Unit</label>
+      <select id="f-unit">
+        <option value="kg">kg</option>
+        <option value="g">g</option>
+        <option value="liter">liter</option>
+        <option value="stk">stk (pcs)</option>
+        <option value="poser">poser (bags)</option>
+        <option value="dåser">dåser (cans)</option>
+        <option value="flasker">flasker (bottles)</option>
+        <option value="glas">glas (jars)</option>
+        <option value="æsker">æsker (boxes)</option>
+        <option value="bundter">bundter (bunches)</option>
+        <option value="pakker">pakker (packages)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Minimumsgrænse / Threshold</label>
+      <input id="f-thresh" type="number" min="0" step="0.1" placeholder="f.eks. 2">
+      <div class="field-hint">Bestil når lageret er under denne mængde.<br><em>Order when stock is below this amount.</em></div>
+    </div>
+    <div class="field">
+      <label>Målbeholdning / Target stock</label>
+      <input id="f-target" type="number" min="0" step="0.1" placeholder="f.eks. 5">
+      <div class="field-hint">Ønsket mængde på lager — appen beregner: mål − faktisk beholdning.<br><em>Desired stock level — app calculates: target − current count.</em></div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="closeModal()">Annuller</button>
+      <button class="save-btn" id="modal-save-btn" onclick="saveIngredient()">Gem / Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="confirm-bg hidden" id="confirm-bg">
+  <div class="confirm-box">
+    <p id="confirm-msg">Er du sikker? / Are you sure?</p>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeConfirm()">Annuller / Cancel</button>
+      <button class="confirm-ok" id="confirm-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dpvysgctgakgntatzwlf.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwdnlzZ2N0Z2FrZ250YXR6d2xmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcyMjQ4NTcsImV4cCI6MjA5MjgwMDg1N30.gXsj7aWVg5hRiKVyBaiLNomU95mVe2nxNxbEHV1hv_Q';
+const HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    ...opts,
+    headers: { ...HEADERS, ...(opts.headers || {}) }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// Counts are still stored locally (they reset daily anyway)
+const LOCAL_KEY = 'thai_counts_v1';
+function loadLocal() {
+  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || { counts: {}, skipped: {} }; }
+  catch(e) { return { counts: {}, skipped: {} }; }
+}
+function saveLocal() {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify({ counts: local.counts, skipped: local.skipped }));
+}
+
+let ingredients = [];
+let local = loadLocal();
+let currentFilter = 'all';
+let editingId = null;
+
+function setSyncStatus(state, text) {
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-text');
+  dot.className = 'sync-dot ' + state;
+  label.textContent = text;
+}
+
+async function loadIngredients() {
+  setSyncStatus('spin', 'Henter varer... / Loading ingredients...');
+  try {
+    const data = await sbFetch('ingredients?order=sort_order,id');
+    ingredients = data || [];
+    setSyncStatus('ok', 'Forbundet / Connected — ' + ingredients.length + ' varer');
+
+    // If no ingredients in DB yet, seed with defaults
+    if (ingredients.length === 0) {
+      await seedDefaults();
+    }
+    return true;
+  } catch(e) {
+    setSyncStatus('err', 'Fejl / Error: ' + e.message);
+    return false;
+  }
+}
+
+async function seedDefaults() {
+  setSyncStatus('spin', 'Opretter standardvarer... / Seeding defaults...');
+  const defaults = [
+    {name:'Kyllingebryst / Chicken breast',cat:'Proteiner / Proteins',unit:'kg',threshold:3,target:5,sort_order:1},
+    {name:'Svinebryst / Pork belly',cat:'Proteiner / Proteins',unit:'kg',threshold:2,target:4,sort_order:2},
+    {name:'Oksekød / Beef',cat:'Proteiner / Proteins',unit:'kg',threshold:2,target:4,sort_order:3},
+    {name:'Rejer / Shrimp',cat:'Proteiner / Proteins',unit:'kg',threshold:1.5,target:3,sort_order:4},
+    {name:'Tofu',cat:'Proteiner / Proteins',unit:'stk',threshold:5,target:10,sort_order:5},
+    {name:'Æg / Eggs',cat:'Proteiner / Proteins',unit:'stk',threshold:20,target:48,sort_order:6},
+    {name:'Thai basilikum / Thai basil',cat:'Grøntsager / Vegetables',unit:'poser',threshold:3,target:5,sort_order:10},
+    {name:'Bønnespirer / Bean sprouts',cat:'Grøntsager / Vegetables',unit:'kg',threshold:1,target:2,sort_order:11},
+    {name:'Broccoli',cat:'Grøntsager / Vegetables',unit:'kg',threshold:1,target:2,sort_order:12},
+    {name:'Aubergine / Eggplant',cat:'Grøntsager / Vegetables',unit:'stk',threshold:5,target:10,sort_order:13},
+    {name:'Forårsløg / Spring onion',cat:'Grøntsager / Vegetables',unit:'bundter',threshold:3,target:5,sort_order:14},
+    {name:'Hvidløg / Garlic',cat:'Grøntsager / Vegetables',unit:'kg',threshold:1,target:2,sort_order:15},
+    {name:'Frisk chili / Fresh chili',cat:'Grøntsager / Vegetables',unit:'kg',threshold:0.5,target:1,sort_order:16},
+    {name:'Lime',cat:'Grøntsager / Vegetables',unit:'kg',threshold:1,target:2,sort_order:17},
+    {name:'Citrongræs / Lemongrass',cat:'Grøntsager / Vegetables',unit:'stk',threshold:5,target:10,sort_order:18},
+    {name:'Galangal',cat:'Grøntsager / Vegetables',unit:'kg',threshold:0.3,target:0.5,sort_order:19},
+    {name:'Kaffir limeblade / Kaffir lime leaves',cat:'Grøntsager / Vegetables',unit:'poser',threshold:2,target:4,sort_order:20},
+    {name:'Jasminris / Jasmine rice',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:5,target:10,sort_order:30},
+    {name:'Risnudler / Rice noodles',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:2,target:5,sort_order:31},
+    {name:'Kokosmælk / Coconut milk',cat:'Lager & Saucer / Pantry & Sauces',unit:'dåser',threshold:10,target:20,sort_order:32},
+    {name:'Fiskesauce / Fish sauce',cat:'Lager & Saucer / Pantry & Sauces',unit:'flasker',threshold:2,target:4,sort_order:33},
+    {name:'Østerssauce / Oyster sauce',cat:'Lager & Saucer / Pantry & Sauces',unit:'flasker',threshold:2,target:4,sort_order:34},
+    {name:'Sojasauce / Soy sauce',cat:'Lager & Saucer / Pantry & Sauces',unit:'flasker',threshold:2,target:4,sort_order:35},
+    {name:'Sød sojasauce / Sweet soy sauce',cat:'Lager & Saucer / Pantry & Sauces',unit:'flasker',threshold:1,target:2,sort_order:36},
+    {name:'Nam prik pao',cat:'Lager & Saucer / Pantry & Sauces',unit:'glas',threshold:2,target:4,sort_order:37},
+    {name:'Rød currypasta / Red curry paste',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:0.5,target:1,sort_order:38},
+    {name:'Grøn currypasta / Green curry paste',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:0.5,target:1,sort_order:39},
+    {name:'Massaman currypasta / Massaman paste',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:0.3,target:0.6,sort_order:40},
+    {name:'Palmesukker / Palm sugar',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:0.5,target:1,sort_order:41},
+    {name:'Tamarindpasta / Tamarind paste',cat:'Lager & Saucer / Pantry & Sauces',unit:'kg',threshold:0.3,target:0.6,sort_order:42},
+    {name:'Vegetabilsk olie / Vegetable oil',cat:'Lager & Saucer / Pantry & Sauces',unit:'liter',threshold:3,target:5,sort_order:43},
+    {name:'Ristede jordnødder / Roasted peanuts',cat:'Tørvarer / Dry goods',unit:'kg',threshold:1,target:2,sort_order:50},
+    {name:'Tørrede chili / Dried chili',cat:'Tørvarer / Dry goods',unit:'kg',threshold:0.3,target:0.5,sort_order:51},
+    {name:'Tørrede rejer / Dried shrimp',cat:'Tørvarer / Dry goods',unit:'kg',threshold:0.3,target:0.5,sort_order:52},
+    {name:'Tørrede svampe / Dried mushroom',cat:'Tørvarer / Dry goods',unit:'kg',threshold:0.2,target:0.4,sort_order:53},
+  ];
+  try {
+    const data = await sbFetch('ingredients', {
+      method: 'POST',
+      body: JSON.stringify(defaults)
+    });
+    ingredients = data || [];
+    setSyncStatus('ok', 'Forbundet / Connected — ' + ingredients.length + ' varer');
+  } catch(e) {
+    setSyncStatus('err', 'Seed fejl / Seed error: ' + e.message);
+  }
+}
+
+// NAV
+function showTab(tab) {
+  document.getElementById('view-count').style.display = tab === 'count' ? '' : 'none';
+  document.getElementById('view-manage').style.display = tab === 'manage' ? '' : 'none';
+  document.getElementById('tab-count').classList.toggle('active', tab === 'count');
+  document.getElementById('tab-manage').classList.toggle('active', tab === 'manage');
+  if (tab === 'manage') renderManage();
+  else renderCount();
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCount();
+}
+
+function calcOrderQty(ing, qtyVal) {
+  const hasTarget = ing.target !== null && ing.target !== undefined && ing.target !== '';
+  if (!hasTarget || qtyVal === '' || qtyVal === undefined) return null;
+  const need = parseFloat(ing.target) - parseFloat(qtyVal);
+  return need > 0 ? Math.round(need * 100) / 100 : 0;
+}
+
+function renderCount() {
+  const q = document.getElementById('search').value.toLowerCase();
+  let counted = 0, low = 0, ok = 0;
+
+  ingredients.forEach(ing => {
+    const qty = local.counts[ing.id];
+    const skipped = !!local.skipped[ing.id];
+    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
+    if (qty !== undefined && qty !== '') counted++;
+    if (hasThresh && qty !== undefined && qty !== '' && parseFloat(qty) < ing.threshold) low++;
+    if (skipped) ok++;
+  });
+  document.getElementById('s-counted').textContent = counted;
+  document.getElementById('s-low').textContent = low;
+  document.getElementById('s-ok').textContent = ok;
+
+  const grouped = {};
+  ingredients.forEach(ing => {
+    if (q && !ing.name.toLowerCase().includes(q)) return;
+    const qty = local.counts[ing.id];
+    const skipped = !!local.skipped[ing.id];
+    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
+    const isLow = hasThresh && qty !== undefined && qty !== '' && parseFloat(qty) < ing.threshold;
+    if (currentFilter === 'low' && !isLow) return;
+    if (currentFilter === 'skipped' && !skipped) return;
+    if (!grouped[ing.cat]) grouped[ing.cat] = [];
+    grouped[ing.cat].push({ ...ing, qty: qty !== undefined ? qty : '', skipped, isLow, hasThresh });
+  });
+
+  const list = document.getElementById('count-list');
+  list.innerHTML = '';
+  const cats = Object.keys(grouped);
+
+  if (cats.length === 0) {
+    list.innerHTML = '<div class="empty-msg">Ingen varer fundet. / No ingredients found.</div>';
+    updateMsg();
+    return;
+  }
+
+  cats.forEach(cat => {
+    const cl = document.createElement('div');
+    cl.className = 'cat-label';
+    cl.textContent = cat;
+    list.appendChild(cl);
+
+    grouped[cat].forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'item-row' + (item.skipped ? ' skipped' : '') + (item.isLow ? ' low-stock' : '');
+
+      const nameWrap = document.createElement('div');
+      nameWrap.className = 'item-name-wrap';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'item-name';
+      nameEl.textContent = item.name;
+      nameWrap.appendChild(nameEl);
+
+      if (item.hasThresh) {
+        const hint = document.createElement('div');
+        if (item.qty !== '') {
+          hint.className = 'thresh-hint ' + (item.isLow ? 'under' : 'over');
+          hint.textContent = item.isLow
+            ? `⚠ Under min. (${item.threshold} ${item.unit})`
+            : `✓ Over min. (${item.threshold} ${item.unit})`;
+        } else {
+          hint.className = 'thresh-hint';
+          hint.textContent = `Min: ${item.threshold} ${item.unit}`;
+        }
+        nameWrap.appendChild(hint);
+      }
+
+      if (item.isLow) {
+        const orderQty = calcOrderQty(item, item.qty);
+        if (orderQty !== null && orderQty > 0) {
+          const orderHint = document.createElement('div');
+          orderHint.className = 'order-hint';
+          orderHint.textContent = `→ Bestil: ${orderQty} ${item.unit}`;
+          nameWrap.appendChild(orderHint);
+        }
+      }
+
+      const qtyIn = document.createElement('input');
+      qtyIn.type = 'text';
+      qtyIn.inputMode = 'decimal';
+      qtyIn.className = 'qty-input';
+      qtyIn.placeholder = '—';
+      qtyIn.value = item.qty;
+      qtyIn.disabled = item.skipped;
+      qtyIn.oninput = e => {
+        local.counts[item.id] = e.target.value;
+        saveLocal();
+        const val = e.target.value;
+        const fVal = parseFloat(val);
+        const isL = val !== '' && !isNaN(fVal) && item.hasThresh && fVal < item.threshold;
+        const parent = e.target.closest('.item-row');
+        parent.classList.toggle('low-stock', isL);
+        const h = parent.querySelector('.thresh-hint');
+        if (h && item.hasThresh) {
+          h.className = 'thresh-hint ' + (val === '' ? '' : isL ? 'under' : 'over');
+          h.textContent = val === '' ? `Min: ${item.threshold} ${item.unit}`
+            : isL ? `⚠ Under min. (${item.threshold} ${item.unit})`
+            : `✓ Over min. (${item.threshold} ${item.unit})`;
+        }
+        let existingOrderHint = parent.querySelector('.order-hint');
+        if (isL) {
+          const orderQty = calcOrderQty(item, val);
+          if (orderQty !== null && orderQty > 0) {
+            if (!existingOrderHint) {
+              existingOrderHint = document.createElement('div');
+              existingOrderHint.className = 'order-hint';
+              nameWrap.appendChild(existingOrderHint);
+            }
+            existingOrderHint.textContent = `→ Bestil: ${orderQty} ${item.unit}`;
+          } else if (existingOrderHint) existingOrderHint.remove();
+        } else if (existingOrderHint) existingOrderHint.remove();
+        updateStats();
+        updateMsg();
+      };
+
+      const unitLbl = document.createElement('span');
+      unitLbl.className = 'unit-lbl';
+      unitLbl.textContent = item.unit;
+
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'skip-btn' + (item.skipped ? ' on' : '');
+      skipBtn.title = 'Spring over / Skip';
+      skipBtn.textContent = '✓';
+      skipBtn.onclick = () => {
+        if (local.skipped[item.id]) {
+          delete local.skipped[item.id];
+        } else {
+          local.skipped[item.id] = true;
+          delete local.counts[item.id];
+        }
+        saveLocal();
+        renderCount();
+      };
+
+      row.appendChild(nameWrap);
+      row.appendChild(qtyIn);
+      row.appendChild(unitLbl);
+      row.appendChild(skipBtn);
+      list.appendChild(row);
+    });
+  });
+
+  updateMsg();
+}
+
+function updateStats() {
+  let counted = 0, low = 0, ok = 0;
+  ingredients.forEach(ing => {
+    const qty = local.counts[ing.id];
+    const skipped = !!local.skipped[ing.id];
+    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
+    if (qty !== undefined && qty !== '') counted++;
+    if (hasThresh && qty !== undefined && qty !== '' && parseFloat(qty) < ing.threshold) low++;
+    if (skipped) ok++;
+  });
+  document.getElementById('s-counted').textContent = counted;
+  document.getElementById('s-low').textContent = low;
+  document.getElementById('s-ok').textContent = ok;
+}
+
+function updateMsg() {
+  const now = new Date();
+  const dateDA = now.toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dateEN = now.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const toOrder = ingredients.filter(ing => {
+    if (local.skipped[ing.id]) return false;
+    const qty = local.counts[ing.id];
+    if (qty === undefined || qty === '') return false;
+    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
+    return hasThresh && parseFloat(qty) < ing.threshold;
+  });
+
+  if (toOrder.length === 0) {
+    document.getElementById('msg-body').textContent =
+      'Ingen varer mangler endnu — udfyld mængder ovenfor.\nNo items need ordering yet — fill in quantities above.';
+    return;
+  }
+
+  const lines = [`📋 Bestillingsliste / Order list`, `📅 ${dateDA} / ${dateEN}`, ''];
+  const byCat = {};
+  toOrder.forEach(ing => {
+    if (!byCat[ing.cat]) byCat[ing.cat] = [];
+    byCat[ing.cat].push(ing);
+  });
+
+  Object.entries(byCat).forEach(([cat, items]) => {
+    lines.push(`▸ ${cat}`);
+    items.forEach(ing => {
+      const qty = local.counts[ing.id];
+      const orderQty = calcOrderQty(ing, qty);
+      if (orderQty !== null && orderQty > 0) {
+        lines.push(`  ${ing.name}: har ${qty} ${ing.unit} → bestil ${orderQty} ${ing.unit}`);
+      } else {
+        lines.push(`  ${ing.name}: ${qty} ${ing.unit} (under min. ${ing.threshold} ${ing.unit})`);
+      }
+    });
+    lines.push('');
+  });
+
+  document.getElementById('msg-body').textContent = lines.join('\n').trim();
+}
+
+function copyMsg() {
+  const text = document.getElementById('msg-body').textContent;
+  if (text.startsWith('Udfyld') || text.startsWith('Ingen varer')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Kopieret! ✓';
+    setTimeout(() => btn.textContent = 'Kopiér', 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Kopieret! ✓';
+    setTimeout(() => btn.textContent = 'Kopiér', 2000);
+  });
+}
+
+function showConfirm(msg, cb) {
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-ok').onclick = () => { closeConfirm(); cb(); };
+  document.getElementById('confirm-bg').classList.remove('hidden');
+}
+function closeConfirm() { document.getElementById('confirm-bg').classList.add('hidden'); }
+function confirmReset() {
+  showConfirm('Nulstil alle mængder og spring-over? / Reset all quantities and skipped items?', () => {
+    local.counts = {}; local.skipped = {};
+    saveLocal(); renderCount();
+  });
+}
+
+// MANAGE
+function renderManage() {
+  const q = (document.getElementById('manage-search')?.value || '').toLowerCase();
+  const grouped = {};
+  ingredients.forEach(ing => {
+    if (q && !ing.name.toLowerCase().includes(q)) return;
+    if (!grouped[ing.cat]) grouped[ing.cat] = [];
+    grouped[ing.cat].push(ing);
+  });
+
+  const list = document.getElementById('manage-list');
+  list.innerHTML = '';
+
+  if (ingredients.length === 0) {
+    list.innerHTML = '<div class="manage-empty">Ingen varer endnu.<br><em>No ingredients yet.</em></div>';
+    return;
+  }
+  if (Object.keys(grouped).length === 0) {
+    list.innerHTML = '<div class="manage-empty">Ingen varer fundet.<br><em>No ingredients found.</em></div>';
+    return;
+  }
+
+  Object.entries(grouped).forEach(([cat, items]) => {
+    const cl = document.createElement('div');
+    cl.className = 'manage-cat-label';
+    cl.textContent = cat;
+    list.appendChild(cl);
+
+    items.forEach(ing => {
+      const row = document.createElement('div');
+      row.className = 'manage-item';
+      const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
+      const hasTarget = ing.target !== null && ing.target !== undefined;
+      const info = document.createElement('div');
+      info.style.flex = '1';
+      info.style.minWidth = '0';
+      info.innerHTML = `<div class="mi-name">${ing.name}</div>
+        <div class="mi-meta">${ing.unit}${hasThresh ? ` <span class="mi-thresh-badge">min ${ing.threshold} ${ing.unit}</span>` : ''}${hasTarget ? ` <span class="mi-target-badge">mål ${ing.target} ${ing.unit}</span>` : ''}</div>`;
+
+      const actions = document.createElement('div');
+      actions.className = 'mi-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.textContent = 'Rediger';
+      editBtn.onclick = () => openModal(ing.id);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del-btn';
+      delBtn.textContent = 'Slet';
+      delBtn.onclick = () => {
+        showConfirm(`Slet "${ing.name}"? / Delete "${ing.name}"?`, async () => {
+          try {
+            await sbFetch('ingredients?id=eq.' + ing.id, { method: 'DELETE' });
+            ingredients = ingredients.filter(i => i.id !== ing.id);
+            delete local.counts[ing.id];
+            delete local.skipped[ing.id];
+            saveLocal();
+            renderManage();
+          } catch(e) {
+            setSyncStatus('err', 'Slet fejl / Delete error: ' + e.message);
+          }
+        });
+      };
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+      row.appendChild(info);
+      row.appendChild(actions);
+      list.appendChild(row);
+    });
+  });
+}
+
+function openModal(id) {
+  editingId = id || null;
+  if (id) {
+    const ing = ingredients.find(i => i.id === id);
+    document.getElementById('modal-title').textContent = 'Rediger vare / Edit ingredient';
+    document.getElementById('f-name').value = ing.name;
+    document.getElementById('f-cat').value = ing.cat;
+    document.getElementById('f-unit').value = ing.unit;
+    document.getElementById('f-thresh').value = ing.threshold !== null && ing.threshold !== undefined ? ing.threshold : '';
+    document.getElementById('f-target').value = ing.target !== null && ing.target !== undefined ? ing.target : '';
+  } else {
+    document.getElementById('modal-title').textContent = 'Tilføj vare / Add ingredient';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-cat').value = 'Proteiner / Proteins';
+    document.getElementById('f-unit').value = 'kg';
+    document.getElementById('f-thresh').value = '';
+    document.getElementById('f-target').value = '';
+  }
+  document.getElementById('modal-bg').classList.remove('hidden');
+  setTimeout(() => document.getElementById('f-name').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.add('hidden');
+  editingId = null;
+}
+
+function handleModalBgClick(e) {
+  if (e.target === document.getElementById('modal-bg')) closeModal();
+}
+
+async function saveIngredient() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').focus(); return; }
+  const cat = document.getElementById('f-cat').value;
+  const unit = document.getElementById('f-unit').value;
+  const threshRaw = document.getElementById('f-thresh').value;
+  const threshold = threshRaw !== '' ? parseFloat(threshRaw) : null;
+  const targetRaw = document.getElementById('f-target').value;
+  const target = targetRaw !== '' ? parseFloat(targetRaw) : null;
+
+  const saveBtn = document.getElementById('modal-save-btn');
+  saveBtn.textContent = 'Gemmer...';
+  saveBtn.disabled = true;
+
+  try {
+    if (editingId) {
+      const data = await sbFetch('ingredients?id=eq.' + editingId, {
+        method: 'PATCH',
+        body: JSON.stringify({ name, cat, unit, threshold, target })
+      });
+      const updated = data[0];
+      const idx = ingredients.findIndex(i => i.id === editingId);
+      if (idx !== -1) ingredients[idx] = updated;
+    } else {
+      const maxOrder = ingredients.reduce((m, i) => Math.max(m, i.sort_order || 0), 0);
+      const data = await sbFetch('ingredients', {
+        method: 'POST',
+        body: JSON.stringify({ name, cat, unit, threshold, target, sort_order: maxOrder + 1 })
+      });
+      ingredients.push(data[0]);
+    }
+    closeModal();
+    renderManage();
+    renderCount();
+    setSyncStatus('ok', 'Gemt / Saved — ' + ingredients.length + ' varer');
+  } catch(e) {
+    setSyncStatus('err', 'Gem fejl / Save error: ' + e.message);
+  } finally {
+    saveBtn.textContent = 'Gem / Save';
+    saveBtn.disabled = false;
+  }
+}
+
+// Init
+const now = new Date();
+document.getElementById('count-date').textContent =
+  now.toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+(async () => {
+  const ok = await loadIngredients();
+  document.getElementById('loading-overlay').classList.add('hidden');
+  if (ok) renderCount();
+})();
+</script>
+</body>
+</html>
