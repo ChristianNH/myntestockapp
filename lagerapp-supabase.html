@@ -22,9 +22,10 @@
   --accent-text:#1B4332;
   --warn:#C0392B;
   --warn-light:#FDECEA;
-  --warn-text:#922B21;
+  --order:#B45309;
+  --order-light:#FEF3C7;
+  --order-text:#92400E;
   --border:#E2DED8;
-  --border2:#C8C4BE;
   --radius:10px;
   --radius-sm:6px;
   --font:'DM Sans',sans-serif;
@@ -48,7 +49,7 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 .stats-row{display:flex;gap:8px;padding:0 1rem 1rem}
 .stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px}
 .stat-num{font-size:22px;font-weight:600;color:var(--text)}
-.stat-num.warn{color:var(--warn)}
+.stat-num.warn{color:var(--order)}
 .stat-num.ok{color:var(--accent)}
 .stat-lbl{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.3}
 
@@ -61,21 +62,28 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 
 .cat-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.7rem 1rem .3rem;font-family:var(--mono)}
 
-.item-row{display:flex;align-items:center;gap:8px;padding:10px 1rem;background:var(--surface);border-top:1px solid var(--border);transition:opacity .15s}
+.item-row{display:flex;align-items:center;gap:10px;padding:12px 1rem;background:var(--surface);border-top:1px solid var(--border);transition:opacity .15s}
 .item-row:last-of-type{border-bottom:1px solid var(--border)}
-.item-row.skipped{opacity:.38}
-.item-row.low-stock{background:var(--warn-light)}
+.item-row.in-stock{opacity:.38}
+.item-row.on-order{background:var(--order-light)}
 .item-name-wrap{flex:1;min-width:0}
-.item-name{font-size:14px;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.thresh-hint{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
-.thresh-hint.under{color:var(--warn);font-weight:500}
-.thresh-hint.over{color:var(--accent);font-weight:500}
-.order-hint{font-size:11px;color:var(--accent-text);font-family:var(--mono);margin-top:1px;font-weight:500}
-.qty-input{width:68px;padding:7px 6px;font-size:14px;font-family:var(--mono);text-align:center;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);outline:none;-webkit-appearance:none;flex-shrink:0}
-.qty-input:focus{border-color:var(--accent);background:var(--surface)}
-.unit-lbl{font-size:12px;color:var(--text3);min-width:30px;font-family:var(--mono);flex-shrink:0}
-.skip-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0;transition:all .15s;font-family:var(--font)}
-.skip-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.item-name{font-size:14px;color:var(--text);line-height:1.3}
+.item-meta{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.item-meta.ordered{color:var(--order-text);font-weight:500}
+.item-meta.stocked{color:var(--accent-text);font-weight:500}
+
+.row-actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
+
+.action-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.action-btn svg{width:16px;height:16px;stroke-width:2;fill:none;transition:all .15s}
+
+.stock-btn svg{stroke:var(--text3)}
+.stock-btn.on{background:var(--accent);border-color:var(--accent)}
+.stock-btn.on svg{stroke:#fff}
+
+.order-btn svg{stroke:var(--text3)}
+.order-btn.on{background:var(--order);border-color:var(--order)}
+.order-btn.on svg{stroke:#fff}
 
 .msg-section{padding:1rem}
 .msg-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
@@ -89,6 +97,19 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 .reset-btn:active{background:var(--surface2)}
 .msg-actions{padding:0 14px 14px}
 .empty-msg{padding:1.5rem 1rem;text-align:center;color:var(--text3);font-size:13px}
+
+.sync-bar{padding:6px 1rem;font-size:11px;font-family:var(--mono);color:var(--text3);display:flex;align-items:center;gap:6px;min-height:28px}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.ok{background:var(--accent)}
+.sync-dot.err{background:var(--warn)}
+.sync-dot.spin{animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:12px}
+.loading-overlay.hidden{display:none}
+.loading-spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text3);font-family:var(--mono)}
 
 .add-btn{padding:8px 14px;font-size:13px;font-weight:500;font-family:var(--font);background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
 .manage-cat-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:.7rem 1rem .3rem;font-family:var(--mono)}
@@ -105,20 +126,6 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 .del-btn{color:var(--warn)}
 .del-btn:active{background:var(--warn-light)}
 .manage-empty{padding:2.5rem 1rem;text-align:center;color:var(--text3);font-size:14px;line-height:1.7}
-
-/* Loading & sync */
-.sync-bar{padding:6px 1rem;font-size:11px;font-family:var(--mono);color:var(--text3);display:flex;align-items:center;gap:6px;min-height:28px}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0}
-.sync-dot.ok{background:var(--accent)}
-.sync-dot.err{background:var(--warn)}
-.sync-dot.spin{background:var(--text3);animation:pulse .8s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-.loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:12px}
-.loading-overlay.hidden{display:none}
-.loading-spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:13px;color:var(--text3);font-family:var(--mono)}
 
 .modal-bg{position:fixed;inset:0;background:rgba(26,24,20,.5);display:flex;align-items:flex-end;justify-content:center;z-index:200;padding:0}
 .modal-bg.hidden{display:none}
@@ -151,7 +158,6 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 </head>
 <body>
 
-<!-- Loading overlay -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="loading-spinner"></div>
   <div class="loading-text">Henter data... / Loading...</div>
@@ -184,16 +190,16 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 
   <div class="stats-row">
     <div class="stat-card">
-      <div class="stat-num" id="s-counted">0</div>
-      <div class="stat-lbl">Optalt<br><em>Counted</em></div>
+      <div class="stat-num" id="s-total">0</div>
+      <div class="stat-lbl">Varer i alt<br><em>Total items</em></div>
     </div>
     <div class="stat-card">
-      <div class="stat-num warn" id="s-low">0</div>
-      <div class="stat-lbl">Under minimum<br><em>Below threshold</em></div>
+      <div class="stat-num warn" id="s-order">0</div>
+      <div class="stat-lbl">Til bestilling<br><em>To order</em></div>
     </div>
     <div class="stat-card">
-      <div class="stat-num ok" id="s-ok">0</div>
-      <div class="stat-lbl">OK / spring over<br><em>OK / skip</em></div>
+      <div class="stat-num ok" id="s-instock">0</div>
+      <div class="stat-lbl">På lager<br><em>In stock</em></div>
     </div>
   </div>
 
@@ -203,8 +209,8 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
 
   <div class="filter-row">
     <button class="f-btn active" onclick="setFilter('all',this)">Alle / All</button>
-    <button class="f-btn" onclick="setFilter('low',this)">Under minimum</button>
-    <button class="f-btn" onclick="setFilter('skipped',this)">Sprunget over / Skipped</button>
+    <button class="f-btn" onclick="setFilter('order',this)">Orderliste / Orderlist</button>
+    <button class="f-btn" onclick="setFilter('instock',this)">På lager / In stock</button>
   </div>
 
   <div id="count-list"></div>
@@ -218,10 +224,10 @@ body{display:flex;flex-direction:column;max-width:600px;margin:0 auto;min-height
         </div>
         <button class="copy-btn" id="copy-btn" onclick="copyMsg()">Kopiér</button>
       </div>
-      <div class="msg-body" id="msg-body">Udfyld mængder ovenfor for at generere din bestillingsbesked.
-Fill in quantities above to generate your order message.</div>
+      <div class="msg-body" id="msg-body">Tryk på 🛒 ved en vare for at tilføje den til ordrelisten.
+Tap 🛒 on an item to add it to the order list.</div>
       <div class="msg-actions">
-        <button class="reset-btn" onclick="confirmReset()">Nulstil alle mængder / Reset all quantities</button>
+        <button class="reset-btn" onclick="confirmReset()">Nulstil alle markeringer / Reset all</button>
       </div>
     </div>
   </div>
@@ -276,12 +282,12 @@ Fill in quantities above to generate your order message.</div>
     <div class="field">
       <label>Minimumsgrænse / Threshold</label>
       <input id="f-thresh" type="number" min="0" step="0.1" placeholder="f.eks. 2">
-      <div class="field-hint">Bestil når lageret er under denne mængde.<br><em>Order when stock is below this amount.</em></div>
+      <div class="field-hint">Til reference i bestillingsbesked.<br><em>Used as reference in order message.</em></div>
     </div>
     <div class="field">
       <label>Målbeholdning / Target stock</label>
       <input id="f-target" type="number" min="0" step="0.1" placeholder="f.eks. 5">
-      <div class="field-hint">Ønsket mængde på lager — appen beregner: mål − faktisk beholdning.<br><em>Desired stock level — app calculates: target − current count.</em></div>
+      <div class="field-hint">Ønsket mængde på lager.<br><em>Desired stock level.</em></div>
     </div>
     <div class="modal-actions">
       <button class="cancel-btn" onclick="closeModal()">Annuller</button>
@@ -290,7 +296,7 @@ Fill in quantities above to generate your order message.</div>
   </div>
 </div>
 
-<!-- CONFIRM DIALOG -->
+<!-- CONFIRM -->
 <div class="confirm-bg hidden" id="confirm-bg">
   <div class="confirm-box">
     <p id="confirm-msg">Er du sikker? / Are you sure?</p>
@@ -316,22 +322,18 @@ async function sbFetch(path, opts = {}) {
     ...opts,
     headers: { ...HEADERS, ...(opts.headers || {}) }
   });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err);
-  }
+  if (!res.ok) throw new Error(await res.text());
   const text = await res.text();
   return text ? JSON.parse(text) : null;
 }
 
-// Counts are still stored locally (they reset daily anyway)
-const LOCAL_KEY = 'thai_counts_v1';
+const LOCAL_KEY = 'thai_state_v2';
 function loadLocal() {
-  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || { counts: {}, skipped: {} }; }
-  catch(e) { return { counts: {}, skipped: {} }; }
+  try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || { ordered: {}, instock: {} }; }
+  catch(e) { return { ordered: {}, instock: {} }; }
 }
 function saveLocal() {
-  localStorage.setItem(LOCAL_KEY, JSON.stringify({ counts: local.counts, skipped: local.skipped }));
+  localStorage.setItem(LOCAL_KEY, JSON.stringify({ ordered: local.ordered, instock: local.instock }));
 }
 
 let ingredients = [];
@@ -339,11 +341,13 @@ let local = loadLocal();
 let currentFilter = 'all';
 let editingId = null;
 
+// SVG icons
+const iconCheck = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+const iconCart = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`;
+
 function setSyncStatus(state, text) {
-  const dot = document.getElementById('sync-dot');
-  const label = document.getElementById('sync-text');
-  dot.className = 'sync-dot ' + state;
-  label.textContent = text;
+  document.getElementById('sync-dot').className = 'sync-dot ' + state;
+  document.getElementById('sync-text').textContent = text;
 }
 
 async function loadIngredients() {
@@ -352,11 +356,7 @@ async function loadIngredients() {
     const data = await sbFetch('ingredients?order=sort_order,id');
     ingredients = data || [];
     setSyncStatus('ok', 'Forbundet / Connected — ' + ingredients.length + ' varer');
-
-    // If no ingredients in DB yet, seed with defaults
-    if (ingredients.length === 0) {
-      await seedDefaults();
-    }
+    if (ingredients.length === 0) await seedDefaults();
     return true;
   } catch(e) {
     setSyncStatus('err', 'Fejl / Error: ' + e.message);
@@ -404,18 +404,14 @@ async function seedDefaults() {
     {name:'Tørrede svampe / Dried mushroom',cat:'Tørvarer / Dry goods',unit:'kg',threshold:0.2,target:0.4,sort_order:53},
   ];
   try {
-    const data = await sbFetch('ingredients', {
-      method: 'POST',
-      body: JSON.stringify(defaults)
-    });
+    const data = await sbFetch('ingredients', { method: 'POST', body: JSON.stringify(defaults) });
     ingredients = data || [];
     setSyncStatus('ok', 'Forbundet / Connected — ' + ingredients.length + ' varer');
   } catch(e) {
-    setSyncStatus('err', 'Seed fejl / Seed error: ' + e.message);
+    setSyncStatus('err', 'Seed fejl: ' + e.message);
   }
 }
 
-// NAV
 function showTab(tab) {
   document.getElementById('view-count').style.display = tab === 'count' ? '' : 'none';
   document.getElementById('view-manage').style.display = tab === 'manage' ? '' : 'none';
@@ -432,40 +428,25 @@ function setFilter(f, btn) {
   renderCount();
 }
 
-function calcOrderQty(ing, qtyVal) {
-  const hasTarget = ing.target !== null && ing.target !== undefined && ing.target !== '';
-  if (!hasTarget || qtyVal === '' || qtyVal === undefined) return null;
-  const need = parseFloat(ing.target) - parseFloat(qtyVal);
-  return need > 0 ? Math.round(need * 100) / 100 : 0;
+function updateStats() {
+  document.getElementById('s-total').textContent = ingredients.length;
+  document.getElementById('s-order').textContent = Object.values(local.ordered).filter(Boolean).length;
+  document.getElementById('s-instock').textContent = Object.values(local.instock).filter(Boolean).length;
 }
 
 function renderCount() {
   const q = document.getElementById('search').value.toLowerCase();
-  let counted = 0, low = 0, ok = 0;
-
-  ingredients.forEach(ing => {
-    const qty = local.counts[ing.id];
-    const skipped = !!local.skipped[ing.id];
-    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
-    if (qty !== undefined && qty !== '') counted++;
-    if (hasThresh && qty !== undefined && qty !== '' && parseFloat(qty) < ing.threshold) low++;
-    if (skipped) ok++;
-  });
-  document.getElementById('s-counted').textContent = counted;
-  document.getElementById('s-low').textContent = low;
-  document.getElementById('s-ok').textContent = ok;
+  updateStats();
 
   const grouped = {};
   ingredients.forEach(ing => {
     if (q && !ing.name.toLowerCase().includes(q)) return;
-    const qty = local.counts[ing.id];
-    const skipped = !!local.skipped[ing.id];
-    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
-    const isLow = hasThresh && qty !== undefined && qty !== '' && parseFloat(qty) < ing.threshold;
-    if (currentFilter === 'low' && !isLow) return;
-    if (currentFilter === 'skipped' && !skipped) return;
+    const isOrdered = !!local.ordered[ing.id];
+    const isInstock = !!local.instock[ing.id];
+    if (currentFilter === 'order' && !isOrdered) return;
+    if (currentFilter === 'instock' && !isInstock) return;
     if (!grouped[ing.cat]) grouped[ing.cat] = [];
-    grouped[ing.cat].push({ ...ing, qty: qty !== undefined ? qty : '', skipped, isLow, hasThresh });
+    grouped[ing.cat].push({ ...ing, isOrdered, isInstock });
   });
 
   const list = document.getElementById('count-list');
@@ -486,7 +467,9 @@ function renderCount() {
 
     grouped[cat].forEach(item => {
       const row = document.createElement('div');
-      row.className = 'item-row' + (item.skipped ? ' skipped' : '') + (item.isLow ? ' low-stock' : '');
+      row.className = 'item-row'
+        + (item.isInstock ? ' in-stock' : '')
+        + (item.isOrdered ? ' on-order' : '');
 
       const nameWrap = document.createElement('div');
       nameWrap.className = 'item-name-wrap';
@@ -496,91 +479,58 @@ function renderCount() {
       nameEl.textContent = item.name;
       nameWrap.appendChild(nameEl);
 
-      if (item.hasThresh) {
-        const hint = document.createElement('div');
-        if (item.qty !== '') {
-          hint.className = 'thresh-hint ' + (item.isLow ? 'under' : 'over');
-          hint.textContent = item.isLow
-            ? `⚠ Under min. (${item.threshold} ${item.unit})`
-            : `✓ Over min. (${item.threshold} ${item.unit})`;
-        } else {
-          hint.className = 'thresh-hint';
-          hint.textContent = `Min: ${item.threshold} ${item.unit}`;
-        }
-        nameWrap.appendChild(hint);
+      const meta = document.createElement('div');
+      if (item.isOrdered) {
+        meta.className = 'item-meta ordered';
+        meta.textContent = '🛒 På ordrelisten / On order list';
+      } else if (item.isInstock) {
+        meta.className = 'item-meta stocked';
+        meta.textContent = '✓ På lager / In stock';
+      } else {
+        meta.className = 'item-meta';
+        meta.textContent = item.unit + (item.threshold ? ` · min ${item.threshold} ${item.unit}` : '');
       }
+      nameWrap.appendChild(meta);
 
-      if (item.isLow) {
-        const orderQty = calcOrderQty(item, item.qty);
-        if (orderQty !== null && orderQty > 0) {
-          const orderHint = document.createElement('div');
-          orderHint.className = 'order-hint';
-          orderHint.textContent = `→ Bestil: ${orderQty} ${item.unit}`;
-          nameWrap.appendChild(orderHint);
-        }
-      }
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
 
-      const qtyIn = document.createElement('input');
-      qtyIn.type = 'text';
-      qtyIn.inputMode = 'decimal';
-      qtyIn.className = 'qty-input';
-      qtyIn.placeholder = '—';
-      qtyIn.value = item.qty;
-      qtyIn.disabled = item.skipped;
-      qtyIn.oninput = e => {
-        local.counts[item.id] = e.target.value;
-        saveLocal();
-        const val = e.target.value;
-        const fVal = parseFloat(val);
-        const isL = val !== '' && !isNaN(fVal) && item.hasThresh && fVal < item.threshold;
-        const parent = e.target.closest('.item-row');
-        parent.classList.toggle('low-stock', isL);
-        const h = parent.querySelector('.thresh-hint');
-        if (h && item.hasThresh) {
-          h.className = 'thresh-hint ' + (val === '' ? '' : isL ? 'under' : 'over');
-          h.textContent = val === '' ? `Min: ${item.threshold} ${item.unit}`
-            : isL ? `⚠ Under min. (${item.threshold} ${item.unit})`
-            : `✓ Over min. (${item.threshold} ${item.unit})`;
-        }
-        let existingOrderHint = parent.querySelector('.order-hint');
-        if (isL) {
-          const orderQty = calcOrderQty(item, val);
-          if (orderQty !== null && orderQty > 0) {
-            if (!existingOrderHint) {
-              existingOrderHint = document.createElement('div');
-              existingOrderHint.className = 'order-hint';
-              nameWrap.appendChild(existingOrderHint);
-            }
-            existingOrderHint.textContent = `→ Bestil: ${orderQty} ${item.unit}`;
-          } else if (existingOrderHint) existingOrderHint.remove();
-        } else if (existingOrderHint) existingOrderHint.remove();
-        updateStats();
-        updateMsg();
-      };
-
-      const unitLbl = document.createElement('span');
-      unitLbl.className = 'unit-lbl';
-      unitLbl.textContent = item.unit;
-
-      const skipBtn = document.createElement('button');
-      skipBtn.className = 'skip-btn' + (item.skipped ? ' on' : '');
-      skipBtn.title = 'Spring over / Skip';
-      skipBtn.textContent = '✓';
-      skipBtn.onclick = () => {
-        if (local.skipped[item.id]) {
-          delete local.skipped[item.id];
+      // In-stock checkmark button
+      const stockBtn = document.createElement('button');
+      stockBtn.className = 'action-btn stock-btn' + (item.isInstock ? ' on' : '');
+      stockBtn.title = 'På lager / In stock';
+      stockBtn.innerHTML = iconCheck;
+      stockBtn.onclick = () => {
+        if (local.instock[item.id]) {
+          delete local.instock[item.id];
         } else {
-          local.skipped[item.id] = true;
-          delete local.counts[item.id];
+          local.instock[item.id] = true;
+          delete local.ordered[item.id];
         }
         saveLocal();
         renderCount();
       };
 
+      // Order cart button
+      const orderBtn = document.createElement('button');
+      orderBtn.className = 'action-btn order-btn' + (item.isOrdered ? ' on' : '');
+      orderBtn.title = 'Tilføj til ordreliste / Add to order list';
+      orderBtn.innerHTML = iconCart;
+      orderBtn.onclick = () => {
+        if (local.ordered[item.id]) {
+          delete local.ordered[item.id];
+        } else {
+          local.ordered[item.id] = true;
+          delete local.instock[item.id];
+        }
+        saveLocal();
+        renderCount();
+      };
+
+      actions.appendChild(stockBtn);
+      actions.appendChild(orderBtn);
       row.appendChild(nameWrap);
-      row.appendChild(qtyIn);
-      row.appendChild(unitLbl);
-      row.appendChild(skipBtn);
+      row.appendChild(actions);
       list.appendChild(row);
     });
   });
@@ -588,41 +538,20 @@ function renderCount() {
   updateMsg();
 }
 
-function updateStats() {
-  let counted = 0, low = 0, ok = 0;
-  ingredients.forEach(ing => {
-    const qty = local.counts[ing.id];
-    const skipped = !!local.skipped[ing.id];
-    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
-    if (qty !== undefined && qty !== '') counted++;
-    if (hasThresh && qty !== undefined && qty !== '' && parseFloat(qty) < ing.threshold) low++;
-    if (skipped) ok++;
-  });
-  document.getElementById('s-counted').textContent = counted;
-  document.getElementById('s-low').textContent = low;
-  document.getElementById('s-ok').textContent = ok;
-}
-
 function updateMsg() {
   const now = new Date();
   const dateDA = now.toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const dateEN = now.toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const toOrder = ingredients.filter(ing => {
-    if (local.skipped[ing.id]) return false;
-    const qty = local.counts[ing.id];
-    if (qty === undefined || qty === '') return false;
-    const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
-    return hasThresh && parseFloat(qty) < ing.threshold;
-  });
+  const toOrder = ingredients.filter(ing => !!local.ordered[ing.id]);
 
   if (toOrder.length === 0) {
     document.getElementById('msg-body').textContent =
-      'Ingen varer mangler endnu — udfyld mængder ovenfor.\nNo items need ordering yet — fill in quantities above.';
+      'Tryk på 🛒 ved en vare for at tilføje den til ordrelisten.\nTap 🛒 on an item to add it to the order list.';
     return;
   }
 
-  const lines = [`📋 Bestillingsliste / Order list`, `📅 ${dateDA} / ${dateEN}`, ''];
+  const lines = ['📋 Bestillingsliste / Order list', `📅 ${dateDA} / ${dateEN}`, ''];
   const byCat = {};
   toOrder.forEach(ing => {
     if (!byCat[ing.cat]) byCat[ing.cat] = [];
@@ -632,12 +561,12 @@ function updateMsg() {
   Object.entries(byCat).forEach(([cat, items]) => {
     lines.push(`▸ ${cat}`);
     items.forEach(ing => {
-      const qty = local.counts[ing.id];
-      const orderQty = calcOrderQty(ing, qty);
-      if (orderQty !== null && orderQty > 0) {
-        lines.push(`  ${ing.name}: har ${qty} ${ing.unit} → bestil ${orderQty} ${ing.unit}`);
+      if (ing.target != null) {
+        lines.push(`  ${ing.name}: bestil op til ${ing.target} ${ing.unit}`);
+      } else if (ing.threshold != null) {
+        lines.push(`  ${ing.name}: min. ${ing.threshold} ${ing.unit}`);
       } else {
-        lines.push(`  ${ing.name}: ${qty} ${ing.unit} (under min. ${ing.threshold} ${ing.unit})`);
+        lines.push(`  ${ing.name}`);
       }
     });
     lines.push('');
@@ -648,7 +577,7 @@ function updateMsg() {
 
 function copyMsg() {
   const text = document.getElementById('msg-body').textContent;
-  if (text.startsWith('Udfyld') || text.startsWith('Ingen varer')) return;
+  if (text.startsWith('Tryk')) return;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.textContent = 'Kopieret! ✓';
@@ -675,13 +604,12 @@ function showConfirm(msg, cb) {
 }
 function closeConfirm() { document.getElementById('confirm-bg').classList.add('hidden'); }
 function confirmReset() {
-  showConfirm('Nulstil alle mængder og spring-over? / Reset all quantities and skipped items?', () => {
-    local.counts = {}; local.skipped = {};
+  showConfirm('Nulstil alle markeringer? / Reset all markings?', () => {
+    local.ordered = {}; local.instock = {};
     saveLocal(); renderCount();
   });
 }
 
-// MANAGE
 function renderManage() {
   const q = (document.getElementById('manage-search')?.value || '').toLowerCase();
   const grouped = {};
@@ -712,8 +640,8 @@ function renderManage() {
     items.forEach(ing => {
       const row = document.createElement('div');
       row.className = 'manage-item';
-      const hasThresh = ing.threshold !== null && ing.threshold !== undefined;
-      const hasTarget = ing.target !== null && ing.target !== undefined;
+      const hasThresh = ing.threshold != null;
+      const hasTarget = ing.target != null;
       const info = document.createElement('div');
       info.style.flex = '1';
       info.style.minWidth = '0';
@@ -736,12 +664,13 @@ function renderManage() {
           try {
             await sbFetch('ingredients?id=eq.' + ing.id, { method: 'DELETE' });
             ingredients = ingredients.filter(i => i.id !== ing.id);
-            delete local.counts[ing.id];
-            delete local.skipped[ing.id];
+            delete local.ordered[ing.id];
+            delete local.instock[ing.id];
             saveLocal();
             renderManage();
+            updateStats();
           } catch(e) {
-            setSyncStatus('err', 'Slet fejl / Delete error: ' + e.message);
+            setSyncStatus('err', 'Slet fejl: ' + e.message);
           }
         });
       };
@@ -763,8 +692,8 @@ function openModal(id) {
     document.getElementById('f-name').value = ing.name;
     document.getElementById('f-cat').value = ing.cat;
     document.getElementById('f-unit').value = ing.unit;
-    document.getElementById('f-thresh').value = ing.threshold !== null && ing.threshold !== undefined ? ing.threshold : '';
-    document.getElementById('f-target').value = ing.target !== null && ing.target !== undefined ? ing.target : '';
+    document.getElementById('f-thresh').value = ing.threshold ?? '';
+    document.getElementById('f-target').value = ing.target ?? '';
   } else {
     document.getElementById('modal-title').textContent = 'Tilføj vare / Add ingredient';
     document.getElementById('f-name').value = '';
@@ -806,9 +735,8 @@ async function saveIngredient() {
         method: 'PATCH',
         body: JSON.stringify({ name, cat, unit, threshold, target })
       });
-      const updated = data[0];
       const idx = ingredients.findIndex(i => i.id === editingId);
-      if (idx !== -1) ingredients[idx] = updated;
+      if (idx !== -1) ingredients[idx] = data[0];
     } else {
       const maxOrder = ingredients.reduce((m, i) => Math.max(m, i.sort_order || 0), 0);
       const data = await sbFetch('ingredients', {
@@ -822,17 +750,15 @@ async function saveIngredient() {
     renderCount();
     setSyncStatus('ok', 'Gemt / Saved — ' + ingredients.length + ' varer');
   } catch(e) {
-    setSyncStatus('err', 'Gem fejl / Save error: ' + e.message);
+    setSyncStatus('err', 'Gem fejl: ' + e.message);
   } finally {
     saveBtn.textContent = 'Gem / Save';
     saveBtn.disabled = false;
   }
 }
 
-// Init
-const now = new Date();
 document.getElementById('count-date').textContent =
-  now.toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  new Date().toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
 (async () => {
   const ok = await loadIngredients();
